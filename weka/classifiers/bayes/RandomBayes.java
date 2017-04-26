@@ -179,7 +179,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         }
     }
     
-    private BitSet randomCFS(Instances instances) throws Exception{
+    public BitSet randomCFS(Instances instances) throws Exception{
         
         CfsSubsetEval cfs = new CfsSubsetEval();//Create the cfs
         cfs.buildEvaluator(instances);
@@ -220,6 +220,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             }
             
             picked_atts.set(picked_att);//Set the picked attribute
+            ++n_picked_atts;
         }
         
         return picked_atts;

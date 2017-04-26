@@ -50,6 +50,10 @@ public class Main {
                 System.out.println(atts.nextElement());
             }
             
+            classifier.buildClassifier(data);
+            
+            System.out.println(classifier.randomCFS(data));
+            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
