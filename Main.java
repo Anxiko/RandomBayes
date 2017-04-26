@@ -40,7 +40,7 @@ public class Main {
             Evaluation eval = new Evaluation(data);
             eval.crossValidateModel(classifier, data, 10, new Random(1));
             
-            System.out.println(eval);
+            System.out.println(eval.toSummaryString());
             
         } catch (Exception ex) {
             ex.printStackTrace();
