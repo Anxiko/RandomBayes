@@ -1,7 +1,9 @@
 
 import java.util.Arrays;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.bayes.RandomBayes;
@@ -35,13 +37,10 @@ public class Main {
             
             RandomBayes classifier = new RandomBayes();//Create the classifier (default config)
             
-            classifier.buildClassifier(data);//Build it using the read dataset
+            Evaluation eval = new Evaluation(data);
+            eval.crossValidateModel(classifier, data, 10, new Random(1));
             
-            for (Instance instance : data){
-                System.out.println("\nClassifying: "+instance);
-                
-                System.out.println("Probabilities: "+Arrays.toString(classifier.distributionForInstance(instance)));
-            }
+            System.out.println(eval);
             
         } catch (Exception ex) {
             ex.printStackTrace();
