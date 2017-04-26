@@ -1,5 +1,6 @@
 
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -7,6 +8,7 @@ import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.bayes.RandomBayes;
+import weka.core.Attribute;
 import weka.core.Instance;
 
 /*
@@ -41,6 +43,12 @@ public class Main {
             eval.crossValidateModel(classifier, data, 10, new Random(1));
             
             System.out.println(eval.toSummaryString());
+            
+            Enumeration<Attribute> atts = data.enumerateAttributes();
+            
+            while(atts.hasMoreElements()){
+                System.out.println(atts.nextElement());
+            }
             
         } catch (Exception ex) {
             ex.printStackTrace();
