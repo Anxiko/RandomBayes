@@ -1,9 +1,11 @@
 
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.bayes.RandomBayes;
+import weka.core.Instance;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -34,6 +36,12 @@ public class Main {
             RandomBayes classifier = new RandomBayes();//Create the classifier (default config)
             
             classifier.buildClassifier(data);//Build it using the read dataset
+            
+            for (Instance instance : data){
+                System.out.println("\nClassifying: "+instance);
+                
+                System.out.println("Probabilities: "+Arrays.toString(classifier.distributionForInstance(instance)));
+            }
             
         } catch (Exception ex) {
             ex.printStackTrace();
