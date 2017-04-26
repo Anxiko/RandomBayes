@@ -220,6 +220,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             }
             
             picked_atts.set(picked_att);//Set the picked attribute
+            ++n_picked_atts;
         }
         
         return picked_atts;
