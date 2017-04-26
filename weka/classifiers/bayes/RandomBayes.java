@@ -30,12 +30,15 @@ import weka.estimators.NormalEstimator;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.filters.unsupervised.instance.Resample;
 import weka.filters.Filter;
+import weka.core.Randomizable;
+
+import java.util.Random;
 
 /**
  *
  * @author Kindo
  */
-public class RandomBayes extends AbstractClassifier{
+public class RandomBayes extends AbstractClassifier implements Randomizable{
     
     /* Config */
     
@@ -62,6 +65,14 @@ public class RandomBayes extends AbstractClassifier{
     
     //Percentages of features
     float perc_feat;
+    
+    /*Random*/
+    
+    //Seed used by the RNG
+    int seed;
+    
+    //RNG to be used by the classifier
+    Random rng;
     
     /*Bagging*/
     
@@ -91,7 +102,9 @@ public class RandomBayes extends AbstractClassifier{
     //Train the classifier with the given instances
     @Override
     public void buildClassifier(Instances data) throws Exception{
-        
+        //Build the RNG
+        rng = new Random(getSeed());
+
         System.out.println("Training data");
         System.out.println(data);
         
@@ -104,6 +117,7 @@ public class RandomBayes extends AbstractClassifier{
             bootstrap.setInputFormat(data);//Configure the filter tp work on data
             bootstrap.setNoReplacement(false);//Using replacement
             bootstrap.setSampleSizePercent(perc_instances*100);//Set the percentage
+            bootstrap.setRandomSeed(rng.nextInt());//Set the random seed
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
@@ -112,6 +126,20 @@ public class RandomBayes extends AbstractClassifier{
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
         }
+    }
+    
+    /*Randomizable*/
+    
+    //Set the random seed used by the RNG (has to be called before buildClassifier
+    @Override
+    public void setSeed(int seed) {
+        this.seed=seed;
+    }
+    
+    //Get the random seed used by the RNG
+    @Override
+    public int getSeed() {
+        return this.seed;
     }
     
 }
