@@ -26,7 +26,10 @@ import weka.estimators.DiscreteEstimator;
 import weka.estimators.Estimator;
 import weka.estimators.KernelEstimator;
 import weka.estimators.NormalEstimator;
+
 import weka.classifiers.bayes.NaiveBayes;
+import weka.filters.unsupervised.instance.Resample;
+import weka.filters.Filter;
 
 /**
  *
@@ -87,11 +90,20 @@ public class RandomBayes extends AbstractClassifier{
     
     //Train the classifier with the given instances
     @Override
-    public void buildClassifier(Instances data){
+    public void buildClassifier(Instances data) throws Exception{
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
-            bag[i] = new weka.classifiers.bayes.NaiveBayes();
-            //weka.filters.unsupervised.instance.Resample;
+            bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
+            
+            //Create and configure the bootsrap filter, to get a random sample of the data
+            Resample bootstrap = new Resample();
+            bootstrap.setInputFormat(data);//Configure the filter tp work on data
+            bootstrap.setNoReplacement(false);//Using replacement
+            bootstrap.setSampleSizePercent(perc_instances*100);//Set the percentage
+            
+            Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
+            
+            bag[i].buildClassifier(sample);//Train the classifier with the sample
         }
     }
     
