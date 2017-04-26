@@ -91,6 +91,10 @@ public class RandomBayes extends AbstractClassifier{
     //Train the classifier with the given instances
     @Override
     public void buildClassifier(Instances data) throws Exception{
+        
+        System.out.println("Training data");
+        System.out.println(data);
+        
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
@@ -102,6 +106,9 @@ public class RandomBayes extends AbstractClassifier{
             bootstrap.setSampleSizePercent(perc_instances*100);//Set the percentage
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
+            
+            System.out.println("Sample " + (i+1) + " out of " + (n_classifiers));
+            System.out.println(sample);
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
         }
