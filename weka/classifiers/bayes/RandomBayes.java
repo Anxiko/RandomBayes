@@ -53,23 +53,26 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Percentage of features used in each classifier
     public static final float DEF_PERC_FEAT = 0.6f;
     
+    //Default seed
+    public static final int DEF_SEED = 0;
+    
     /* Data */
     
     /*Parameters*/
     
     //Number of classifiers
-    int n_classifiers;
+    int n_classifiers=DEF_N_CLASSIFIERS;
     
     //Percentage of instances
-    float perc_instances;
+    float perc_instances=DEF_PERC_INSTANCES;
     
     //Percentages of features
-    float perc_feat;
+    float perc_feat=DEF_PERC_FEAT;
     
     /*Random*/
     
     //Seed used by the RNG
-    int seed;
+    int seed=DEF_SEED;
     
     //RNG to be used by the classifier
     Random rng;
@@ -87,14 +90,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     public RandomBayes(){
         //Call parent constructor
         super();
-        
-        //Set default parameters
-        n_classifiers = DEF_N_CLASSIFIERS;
-        perc_instances = DEF_PERC_INSTANCES;
-        perc_feat = DEF_PERC_FEAT;
-        
-        //Bag of classifiers
-        bag = new NaiveBayes[n_classifiers];
     }
     
     /*Classifier*/
@@ -105,6 +100,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         //Build the RNG
         rng = new Random(getSeed());
         
+        //Bag of classifiers
+        bag = new NaiveBayes[n_classifiers];
         
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
