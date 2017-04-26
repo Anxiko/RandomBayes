@@ -145,7 +145,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         }
         
         if (bag.length>=2){//Need to normalize?
-            for (int cnt = 0; cnt<bag.length; ++cnt){
+            for (int cnt = 0; cnt<prob.length; ++cnt){
                 prob[cnt]/=bag.length;//Normalize the probability, so the sum of all is 1
             }
         }
