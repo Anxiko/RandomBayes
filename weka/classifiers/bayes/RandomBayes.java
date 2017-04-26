@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashSet;
 import java.util.List;
 
 import weka.classifiers.AbstractClassifier;
@@ -31,8 +33,10 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.filters.unsupervised.instance.Resample;
 import weka.filters.Filter;
 import weka.core.Randomizable;
+import weka.attributeSelection.CfsSubsetEval;
 
 import java.util.Random;
+import java.util.Set;
 
 /**
  *
@@ -53,23 +57,26 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Percentage of features used in each classifier
     public static final float DEF_PERC_FEAT = 0.6f;
     
+    //Default seed
+    public static final int DEF_SEED = 0;
+    
     /* Data */
     
     /*Parameters*/
     
     //Number of classifiers
-    int n_classifiers;
+    int n_classifiers=DEF_N_CLASSIFIERS;
     
     //Percentage of instances
-    float perc_instances;
+    float perc_instances=DEF_PERC_INSTANCES;
     
     //Percentages of features
-    float perc_feat;
+    float perc_feat=DEF_PERC_FEAT;
     
     /*Random*/
     
     //Seed used by the RNG
-    int seed;
+    int seed=DEF_SEED;
     
     //RNG to be used by the classifier
     Random rng;
@@ -87,14 +94,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     public RandomBayes(){
         //Call parent constructor
         super();
-        
-        //Set default parameters
-        n_classifiers = DEF_N_CLASSIFIERS;
-        perc_instances = DEF_PERC_INSTANCES;
-        perc_feat = DEF_PERC_FEAT;
-        
-        //Bag of classifiers
-        bag = new NaiveBayes[n_classifiers];
     }
     
     /*Classifier*/
@@ -105,6 +104,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         //Build the RNG
         rng = new Random(getSeed());
         
+		//Bag of classifiers
+        bag = new NaiveBayes[n_classifiers];
+
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
@@ -151,6 +153,78 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         
         return prob;
     }
+    
+    /*
+        Perform feature selection, using CFS's score as the random probability for a feature to be picked.
+        Process is constructive, starting with 0 features and adding one in each iteration until the percentage of features is reached.
+        The CFS score is the probability of that feature to be added
+    */
+    
+    
+    private class RatedAttribute{
+        private final double score;//CFS rating when adding this attribute
+        private final int att;//Index of the attribute
+        
+        public RatedAttribute(double score, int att){
+            this.score = score;
+            this.att = att;
+        }
+        
+        double getScore(){
+            return score;
+        }
+        
+        int getAtt(){
+            return att;
+        }
+    }
+    
+    private BitSet randomCFS(Instances instances) throws Exception{
+        
+        CfsSubsetEval cfs = new CfsSubsetEval();//Create the cfs
+        cfs.buildEvaluator(instances);
+        
+        List<Attribute> all_atts = Collections.list(instances.enumerateAttributes());//List of all attributes
+        BitSet picked_atts = new BitSet(all_atts.size());//Attributes ready to be picked
+        picked_atts.clear();//Set them all to false, none is picked at the start
+        final int goal = (int) Math.ceil(all_atts.size()*this.perc_feat);//Number of features to reach
+        int n_picked_atts = 0;//Number of picked atts
+        
+        while(n_picked_atts<goal){//Add features until the goal is reached
+            double totalScore = 0.0;//Total CFS score in this iteration
+            List<RatedAttribute> ranking = new ArrayList<>();//Stores the CFS score when adding an attribute
+            for(int i = 0; i < all_atts.size(); ++i){//Iterate over the possible attributes
+                if (picked_atts.get(i))//Skip the element if it's already there
+                    continue;
+                
+                picked_atts.set(i);//Add this attribute
+                double score = cfs.evaluateSubset(picked_atts);//Eval the new subset
+                totalScore+=score;//Add it to the total
+                ranking.add(new RatedAttribute(score,i));
+                picked_atts.clear(i);//Turn it off again
+            }
+            
+            double random_att = rng.nextDouble()*totalScore;//Attribute will be picked when the accumulative probability reaches or exceeds this value
+            Integer picked_att = null;//Attribute to be picked
+            
+            for (RatedAttribute rated_att : ranking){
+                random_att-=rated_att.getScore();//Decrease the random number by the probability
+                if(random_att<=0){//This is the selected attribute
+                    picked_att = rated_att.getAtt();
+                    break;
+                }
+            }
+            
+            if (picked_att == null){//If none was picked, pick the last one
+                picked_att = ranking.size()-1;
+            }
+            
+            picked_atts.set(picked_att);//Set the picked attribute
+        }
+        
+        return picked_atts;
+    }
+    
     /*Randomizable*/
     
     //Set the random seed used by the RNG (has to be called before buildClassifier
