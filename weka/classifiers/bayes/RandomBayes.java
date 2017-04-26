@@ -102,10 +102,12 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Train the classifier with the given instances
     @Override
     public void buildClassifier(Instances data) throws Exception{
+        
+        System.out.println("Using seed "+getSeed());
         //Build the RNG
         rng = new Random(getSeed());
 
-        System.out.println("Training data");
+        System.out.println("\nTraining data\n\n");
         System.out.println(data);
         
         //Train all the NaiveBayes
@@ -121,7 +123,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
-            System.out.println("Sample " + (i+1) + " out of " + (n_classifiers));
+            System.out.println("\nSample " + (i+1) + " out of " + (n_classifiers)+"\n\n");
             System.out.println(sample);
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
