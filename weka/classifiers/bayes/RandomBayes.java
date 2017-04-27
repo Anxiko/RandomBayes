@@ -123,8 +123,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             BitSet features_bit = randomCFS(sample);//Bits of the features to keep
             List<Integer> indices = new ArrayList<>();//Get them to a list
-            for (int feat_index = features_bit.nextSetBit(0); feat_index > 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
-                indices.add(i);
+            for (int feat_index = features_bit.nextSetBit(0); feat_index >= 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
+                indices.add(feat_index);
             }
             int[] array_indices = indices.stream().mapToInt(x->x).toArray();
             
