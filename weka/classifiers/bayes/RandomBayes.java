@@ -122,9 +122,10 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
             BitSet features_bit = randomCFS(sample);//Bits of the features to keep
+            System.out.println(features_bit);
             List<Integer> indices = new ArrayList<>();//Get them to a list
-            for (int feat_index = features_bit.nextSetBit(0); feat_index > 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
-                indices.add(i);
+            for (int feat_index = features_bit.nextSetBit(0); feat_index >= 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
+                indices.add(feat_index);
             }
             int[] array_indices = indices.stream().mapToInt(x->x).toArray();
             
@@ -134,6 +135,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             rem.setInvertSelection(true);//Keep the columns in the indices
             rem.setAttributeIndicesArray(array_indices);//Columns to keep
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
+            
+            System.out.println(indices);
+            System.out.println(sample);
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
         }

@@ -43,17 +43,6 @@ public class Main {
             eval.crossValidateModel(classifier, data, 10, new Random(1));
             
             System.out.println(eval.toSummaryString());
-            
-            Enumeration<Attribute> atts = data.enumerateAttributes();
-            
-            while(atts.hasMoreElements()){
-                System.out.println(atts.nextElement());
-            }
-            
-            classifier.buildClassifier(data);
-            
-            System.out.println(classifier.randomCFS(data));
-            
         } catch (Exception ex) {
             ex.printStackTrace();
         }
