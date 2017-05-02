@@ -90,6 +90,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Indices of columns used in each classifier
     int indices_used[][];
     
+    //Instances used to train this classifier
+    Instances instances_used;
+    
     
     /* Methods */
     
@@ -113,6 +116,10 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         
         //Indices of attributes used in each classifier
         indices_used = new int [n_classifiers][];
+        
+        //Instances used to train this classifier
+        instances_used = new Instances(data);
+        instances_used.delete();//Keep the format, not the actual instances!
         
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
@@ -149,9 +156,11 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         
         for (int i = 0; i<n_classifiers;++i){//Classify with each NaiveBayes in the bag
             
+            //Remove unused attributes
             Remove rem = new Remove();
             rem.setInvertSelection(true);
             rem.setAttributeIndicesArray(indices_used[i]);
+            rem.setInputFormat(instances_used);
             rem.input(instance);
             rem.batchFinished();
             instance = rem.output();
