@@ -134,13 +134,17 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
-            int[] array_indices = randomCFS(sample);
-            indices_used[i]=array_indices;//Copy the filter options, to reapply it later
+            List<Integer> chosen_atts = randomCFS(sample);//Indices of attributes to be kept
+            indices_used[i] = chosen_atts.stream().mapToInt(x->x).toArray();//save this to reapply later
+            
+            
+            if (data.classIndex()>=0)//If the class index is known, keep it
+                chosen_atts.add(data.classIndex());
             
             //Filter to remove the features
             Remove rem = new Remove();
             rem.setInvertSelection(true);//Keep the columns in the indices
-            rem.setAttributeIndicesArray(array_indices);//Columns to keep
+            rem.setAttributeIndicesArray(chosen_atts.stream().mapToInt(x->x).toArray());//Columns to keep
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
             
@@ -212,7 +216,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         }
     }
     
-    private int[] randomCFS(Instances instances) throws Exception{
+    private List<Integer> randomCFS(Instances instances) throws Exception{
         
         CfsSubsetEval cfs = new CfsSubsetEval();//Create the cfs
         cfs.buildEvaluator(instances);
@@ -261,10 +265,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         for (int feat_index = features_bit.nextSetBit(0); feat_index >= 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
             indices.add(feat_index);
         }
-        if (instances.classIndex()>=0)//If the class index is known, keep it
-            indices.add(instances.classIndex());
-        int[] array_indices = indices.stream().mapToInt(x->x).toArray();
-        return array_indices;
+        
+        return indices;
     }
     
     /*Randomizable*/
