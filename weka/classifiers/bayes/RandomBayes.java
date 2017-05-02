@@ -87,6 +87,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Bag of classifiers
     NaiveBayes[] bag;
     
+    //Indices of columns used in each classifier
+    int indices_used[][];
+    
     
     /* Methods */
     
@@ -108,6 +111,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         //Bag of classifiers
         bag = new NaiveBayes[n_classifiers];
         
+        //Indices of attributes used in each classifier
+        indices_used = new int [n_classifiers][];
+        
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
@@ -122,6 +128,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
             int[] array_indices = randomCFS(sample);
+            indices_used[i]=array_indices;//Copy the filter options, to reapply it later
             
             //Filter to remove the features
             Remove rem = new Remove();
@@ -141,6 +148,13 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         double[] prob = null;//Contains the probability to belong to each class
         
         for (int i = 0; i<n_classifiers;++i){//Classify with each NaiveBayes in the bag
+            
+            Remove rem = new Remove();
+            rem.setInvertSelection(true);
+            rem.setAttributeIndicesArray(indices_used[i]);
+            rem.input(instance);
+            rem.batchFinished();
+            instance = rem.output();
             
             double[] new_prob = bag[i].distributionForInstance(instance);//Distribution for this classifier
             
