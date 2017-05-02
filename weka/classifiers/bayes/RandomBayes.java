@@ -137,7 +137,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
             
-            System.out.println(indices);
             System.out.println(sample);
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
