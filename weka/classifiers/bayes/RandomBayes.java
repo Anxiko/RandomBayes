@@ -126,6 +126,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             for (int feat_index = features_bit.nextSetBit(0); feat_index >= 0; feat_index = features_bit.nextSetBit(feat_index + 1)) {
                 indices.add(feat_index);
             }
+            if (sample.classIndex()>=0)//If the class index is known, keep it
+                indices.add(sample.classIndex());
             int[] array_indices = indices.stream().mapToInt(x->x).toArray();
             
             //Filter to remove the features
