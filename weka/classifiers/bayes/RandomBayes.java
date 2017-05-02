@@ -114,10 +114,10 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             //Create and configure the bootsrap filter, to get a random sample of the data
             Resample bootstrap = new Resample();
-            bootstrap.setInputFormat(data);//Configure the filter tp work on data
             bootstrap.setNoReplacement(false);//Using replacement
             bootstrap.setSampleSizePercent(perc_instances*100);//Set the percentage
             bootstrap.setRandomSeed(rng.nextInt());//Set the random seed
+            bootstrap.setInputFormat(data);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
@@ -133,9 +133,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             //Filter to remove the features
             Remove rem = new Remove();
-            rem.setInputFormat(sample);
             rem.setInvertSelection(true);//Keep the columns in the indices
             rem.setAttributeIndicesArray(array_indices);//Columns to keep
+            rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
             
             System.out.println(indices);
