@@ -161,9 +161,18 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         for (int i = 0; i<n_classifiers;++i){//Classify with each NaiveBayes in the bag
             
             //Remove unused attributes
+            
+            List<Integer> lista = new ArrayList<>();
+            
+            for (int j = 0; j<indices_used[i].length;++j){
+                lista.add(indices_used[i][j]);
+            }
+            lista.add(instances_used.classIndex());
+            int[] indices_with_class = lista.stream().mapToInt(x->x).toArray();
+            
             Remove rem = new Remove();
             rem.setInvertSelection(true);
-            rem.setAttributeIndicesArray(indices_used[i]);
+            rem.setAttributeIndicesArray(indices_with_class);
             rem.setInputFormat(instances_used);
             rem.input(instance);
             rem.batchFinished();
