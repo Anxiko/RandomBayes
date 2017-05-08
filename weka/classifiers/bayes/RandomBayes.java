@@ -127,10 +127,14 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
             if (data.classIndex()>=0)//If the class index is known, keep it
                 chosen_atts.add(data.classIndex());
             
+            int[] array_atts = new int[chosen_atts.size()];
+            for (int index = 0;index<array_atts.length; ++index)
+                array_atts[index] += chosen_atts.get(index);
+            
             //Filter to remove the features
             Remove rem = new Remove();
             rem.setInvertSelection(true);//Keep the columns in the indices
-            rem.setAttributeIndicesArray(chosen_atts.stream().mapToInt(x->x).toArray());//Columns to keep
+            rem.setAttributeIndicesArray(array_atts);//Columns to keep
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             filters[i] = rem;//Save the filter to reapply later
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
