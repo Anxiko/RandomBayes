@@ -37,6 +37,7 @@ import weka.attributeSelection.CfsSubsetEval;
 
 import java.util.Random;
 import java.util.Set;
+import weka.core.DenseInstance;
 import weka.filters.unsupervised.attribute.Remove;
 
 /**
@@ -87,12 +88,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     //Bag of classifiers
     NaiveBayes[] bag;
     
-    //Indices of columns used in each classifier
-    int indices_used[][];
-    
-    //Instances used to train this classifier
-    Instances instances_used;
-    
+    //Filter used for each classifier
+    Filter[] filters;
     
     /* Methods */
     
@@ -115,11 +112,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         bag = new NaiveBayes[n_classifiers];
         
         //Indices of attributes used in each classifier
-        indices_used = new int [n_classifiers][];
-        
-        //Instances used to train this classifier
-        instances_used = new Instances(data);
-        instances_used.delete();//Keep the format, not the actual instances!
+        filters = new Filter[n_classifiers];
         
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
@@ -135,8 +128,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
             
             List<Integer> chosen_atts = randomCFS(sample);//Indices of attributes to be kept
-            indices_used[i] = chosen_atts.stream().mapToInt(x->x).toArray();//save this to reapply later
-            
             
             if (data.classIndex()>=0)//If the class index is known, keep it
                 chosen_atts.add(data.classIndex());
@@ -146,9 +137,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             rem.setInvertSelection(true);//Keep the columns in the indices
             rem.setAttributeIndicesArray(chosen_atts.stream().mapToInt(x->x).toArray());//Columns to keep
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
+            filters[i] = rem;//Save the filter to reapply later
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
-            
-            System.out.println(sample);
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
         }
@@ -162,25 +152,19 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         
         for (int i = 0; i<n_classifiers;++i){//Classify with each NaiveBayes in the bag
             
-            //Remove unused attributes
+            //Make a copy of the instance, and reapply the filter
+            Instance copy = new DenseInstance(instance);
             
-            List<Integer> lista = new ArrayList<>();
+            Filter filter = filters[i];
             
-            for (int j = 0; j<indices_used[i].length;++j){
-                lista.add(indices_used[i][j]);
-            }
-            lista.add(instances_used.classIndex());
-            int[] indices_with_class = lista.stream().mapToInt(x->x).toArray();
+            if (!filter.isNewBatch())
+                filter.batchFinished();
             
-            Remove rem = new Remove();
-            rem.setInvertSelection(true);
-            rem.setAttributeIndicesArray(indices_with_class);
-            rem.setInputFormat(instances_used);
-            rem.input(instance);
-            rem.batchFinished();
-            instance = rem.output();
+            filter.input(copy);
+            filter.batchFinished();
+            copy = filter.output();
             
-            double[] new_prob = bag[i].distributionForInstance(instance);//Distribution for this classifier
+            double[] new_prob = bag[i].distributionForInstance(copy);//Distribution for this classifier
             
             if (prob==null){//First result
                 prob=new_prob;//Copy it directly
