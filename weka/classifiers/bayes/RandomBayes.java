@@ -2,15 +2,12 @@ package weka.classifiers.bayes;
 
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 import weka.classifiers.AbstractClassifier;
-import weka.core.Aggregateable;
 import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
@@ -18,26 +15,14 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Option;
 import weka.core.OptionHandler;
-import weka.core.RevisionUtils;
-import weka.core.TechnicalInformation;
-import weka.core.TechnicalInformation.Field;
-import weka.core.TechnicalInformation.Type;
-import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
-import weka.core.WeightedInstancesHandler;
-import weka.estimators.DiscreteEstimator;
-import weka.estimators.Estimator;
-import weka.estimators.KernelEstimator;
-import weka.estimators.NormalEstimator;
 
-import weka.classifiers.bayes.NaiveBayes;
 import weka.filters.unsupervised.instance.Resample;
 import weka.filters.Filter;
 import weka.core.Randomizable;
 import weka.attributeSelection.CfsSubsetEval;
 
 import java.util.Random;
-import java.util.Set;
 import weka.core.DenseInstance;
 import weka.filters.unsupervised.attribute.Remove;
 
