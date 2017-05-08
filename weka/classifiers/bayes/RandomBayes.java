@@ -395,4 +395,18 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         Utils.checkForRemainingOptions(options);
     }
     
+    @Override
+    public Enumeration<Option> listOptions(){
+        List<Option> options = new LinkedList<>();
+        
+        options.add(new Option("Number of classifiers","N",1,"-N"));
+        options.add(new Option("Percentage of instances to train each classifier with", "P",1,"-P"));
+        options.add(new Option("Percentafe of features to train each classifier with", "F",1,"-F"));
+        options.add(new Option("\tUse kernel density estimator rather than normal\n"+"\tdistribution for numeric attributes", "K", 0, "-K"));
+        options.add(new Option("\tUse supervised discretization to process numeric attributes\n", "D",0, "-D"));
+        options.add(new Option("\tDisplay model in old format (good when there are "+ "many classes)\n", "O", 0, "-O"));
+        
+        return Collections.enumeration(options);
+    }
+    
 }
