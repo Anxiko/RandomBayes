@@ -409,4 +409,27 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         return Collections.enumeration(options);
     }
     
+    /*Capabalities*/
+    
+    @Override
+    public Capabilities getCapabilities(){
+        
+    Capabilities result = super.getCapabilities();
+    result.disableAll();
+
+    // attributes
+    result.enable(Capability.NOMINAL_ATTRIBUTES);
+    result.enable(Capability.NUMERIC_ATTRIBUTES);
+    result.enable( Capability.MISSING_VALUES );
+
+    // class
+    result.enable(Capability.NOMINAL_CLASS);
+    result.enable(Capability.MISSING_CLASS_VALUES);
+
+    // instances
+    result.setMinimumNumberInstances(0);
+
+    return result;
+    }
+    
 }
