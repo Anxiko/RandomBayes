@@ -261,6 +261,10 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
                 picked_atts.set(picked_att);//Set the picked attribute
                 ++n_picked_atts;
             }
+            else
+            {
+                break;
+            }
         }
         
         BitSet features_bit = picked_atts;//Bits of the features to keep
