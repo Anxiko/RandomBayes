@@ -220,6 +220,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         picked_atts.clear();//Set them all to false, none is picked at the start
         final int goal = (int) Math.ceil(all_atts.size()*this.perc_feat);//Number of features to reach
         int n_picked_atts = 0;//Number of picked atts
+        double currentScore = 0.0;//CFS score of the currently selected subset of attributes (0 at the start, because we start with none)
         
         while(n_picked_atts<goal){//Add features until the goal is reached
             double totalScore = 0.0;//Total CFS score in this iteration
@@ -237,21 +238,29 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
             
             double random_att = rng.nextDouble()*totalScore;//Attribute will be picked when the accumulative probability reaches or exceeds this value
             Integer picked_att = null;//Attribute to be picked
+            double newScore = 0.0;//CFS score adding the new picked attribute
             
             for (RatedAttribute rated_att : ranking){
                 random_att-=rated_att.getScore();//Decrease the random number by the probability
                 if(random_att<=0){//This is the selected attribute
                     picked_att = rated_att.getAtt();
+                    newScore = rated_att.getScore();
                     break;
                 }
             }
             
             if (picked_att == null){//If none was picked, pick the last one
-                picked_att = ranking.size()-1;
+                picked_att = ranking.get(ranking.size()-1).getAtt();
+                newScore = ranking.get(ranking.size()-1).getScore();
             }
             
-            picked_atts.set(picked_att);//Set the picked attribute
-            ++n_picked_atts;
+            //If the attribute picked improves the score, add it to the set
+            if (newScore > currentScore)
+            {
+                currentScore = newScore;
+                picked_atts.set(picked_att);//Set the picked attribute
+                ++n_picked_atts;
+            }
         }
         
         BitSet features_bit = picked_atts;//Bits of the features to keep
