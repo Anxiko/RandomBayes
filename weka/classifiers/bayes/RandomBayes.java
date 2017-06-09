@@ -2,14 +2,12 @@ package weka.classifiers.bayes;
 
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Vector;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import weka.classifiers.AbstractClassifier;
-import weka.core.Aggregateable;
 import weka.core.Attribute;
 import weka.core.Capabilities;
 import weka.core.Capabilities.Capability;
@@ -17,26 +15,14 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Option;
 import weka.core.OptionHandler;
-import weka.core.RevisionUtils;
-import weka.core.TechnicalInformation;
-import weka.core.TechnicalInformation.Field;
-import weka.core.TechnicalInformation.Type;
-import weka.core.TechnicalInformationHandler;
 import weka.core.Utils;
-import weka.core.WeightedInstancesHandler;
-import weka.estimators.DiscreteEstimator;
-import weka.estimators.Estimator;
-import weka.estimators.KernelEstimator;
-import weka.estimators.NormalEstimator;
 
-import weka.classifiers.bayes.NaiveBayes;
 import weka.filters.unsupervised.instance.Resample;
 import weka.filters.Filter;
 import weka.core.Randomizable;
 import weka.attributeSelection.CfsSubsetEval;
 
 import java.util.Random;
-import java.util.Set;
 import weka.core.DenseInstance;
 import weka.filters.unsupervised.attribute.Remove;
 
@@ -44,7 +30,7 @@ import weka.filters.unsupervised.attribute.Remove;
  *
  * @author Kindo
  */
-public class RandomBayes extends AbstractClassifier implements Randomizable{
+public class RandomBayes extends AbstractClassifier implements Randomizable, OptionHandler{
     
     /* Config */
     
@@ -58,6 +44,8 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     
     //Percentage of features used in each classifier
     public static final float DEF_PERC_FEAT = 0.6f;
+    
+    public static final boolean DEF_K_FLAG=false,DEF_D_FLAG=false,DEF_O_FLAG=false;
     
     //Default seed
     public static final int DEF_SEED = 0;
@@ -74,6 +62,10 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     
     //Percentages of features
     float perc_feat=DEF_PERC_FEAT;
+    
+    //NaiveBayes parameters
+    
+    boolean k_flag=DEF_K_FLAG,d_flag=DEF_D_FLAG,o_flag=DEF_O_FLAG;
     
     /*Random*/
     
@@ -117,6 +109,9 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
+            bag[i].setDisplayModelInOldFormat(o_flag);
+            bag[i].setUseKernelEstimator(k_flag);
+            bag[i].setUseSupervisedDiscretization(d_flag);
             
             //Create and configure the bootsrap filter, to get a random sample of the data
             Resample bootstrap = new Resample();
@@ -132,10 +127,14 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             if (data.classIndex()>=0)//If the class index is known, keep it
                 chosen_atts.add(data.classIndex());
             
+            int[] array_atts = new int[chosen_atts.size()];
+            for (int index = 0;index<array_atts.length; ++index)
+                array_atts[index] += chosen_atts.get(index);
+            
             //Filter to remove the features
             Remove rem = new Remove();
             rem.setInvertSelection(true);//Keep the columns in the indices
-            rem.setAttributeIndicesArray(chosen_atts.stream().mapToInt(x->x).toArray());//Columns to keep
+            rem.setAttributeIndicesArray(array_atts);//Columns to keep
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             filters[i] = rem;//Save the filter to reapply later
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
@@ -221,6 +220,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
         picked_atts.clear();//Set them all to false, none is picked at the start
         final int goal = (int) Math.ceil(all_atts.size()*this.perc_feat);//Number of features to reach
         int n_picked_atts = 0;//Number of picked atts
+        double currentScore = 0.0;//CFS score of the currently selected subset of attributes (0 at the start, because we start with none)
         
         while(n_picked_atts<goal){//Add features until the goal is reached
             double totalScore = 0.0;//Total CFS score in this iteration
@@ -238,21 +238,29 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
             
             double random_att = rng.nextDouble()*totalScore;//Attribute will be picked when the accumulative probability reaches or exceeds this value
             Integer picked_att = null;//Attribute to be picked
+            double newScore = 0.0;//CFS score adding the new picked attribute
             
             for (RatedAttribute rated_att : ranking){
                 random_att-=rated_att.getScore();//Decrease the random number by the probability
                 if(random_att<=0){//This is the selected attribute
                     picked_att = rated_att.getAtt();
+                    newScore = rated_att.getScore();
                     break;
                 }
             }
             
             if (picked_att == null){//If none was picked, pick the last one
-                picked_att = ranking.size()-1;
+                picked_att = ranking.get(ranking.size()-1).getAtt();
+                newScore = ranking.get(ranking.size()-1).getScore();
             }
             
-            picked_atts.set(picked_att);//Set the picked attribute
-            ++n_picked_atts;
+            //If the attribute picked improves the score, add it to the set
+            if (newScore > currentScore)
+            {
+                currentScore = newScore;
+                picked_atts.set(picked_att);//Set the picked attribute
+                ++n_picked_atts;
+            }
         }
         
         BitSet features_bit = picked_atts;//Bits of the features to keep
@@ -276,6 +284,150 @@ public class RandomBayes extends AbstractClassifier implements Randomizable{
     @Override
     public int getSeed() {
         return this.seed;
+    }
+    
+    /*OptionHandler*/
+    
+    public void set_instances_perc(float new_perc){
+        if (bag==null)
+            perc_instances = new_perc/100.0f;
+    }
+    
+    public float get_instances_perc(){
+        return 100.0f*perc_instances;
+    }
+    
+    public void set_feat_perc(float new_perc){
+        if (bag==null)
+            perc_feat = new_perc/100.0f;
+    }
+    
+    public float get_feat_perc(){
+        return 100.0f*perc_feat;
+    }
+    
+    public void set_n_classifiers(int new_n){
+        if (bag==null)
+            n_classifiers=new_n;
+    }
+    
+    public int get_n_classifiers(){
+        return n_classifiers;
+    }
+    
+    public void set_k_flag(boolean new_flag){
+        if (bag==null){
+            k_flag=new_flag;
+            if (k_flag)
+                set_d_flag(false);
+        }
+    }
+    
+    public boolean get_k_flag(){
+        return k_flag;
+    }
+    
+    public void set_d_flag(boolean new_flag){
+        if (bag==null){
+            d_flag=new_flag;
+            if (d_flag)
+                set_k_flag(false);
+        }
+    }
+    
+    public boolean get_d_flag(){
+        return d_flag;
+    }
+    
+    public void set_o_flag(boolean new_flag){
+        if (bag==null){
+            o_flag=new_flag;
+        }
+    }
+    
+    public boolean get_o_flag(){
+        return o_flag;
+    }
+    
+    @Override
+    public String[] getOptions() {
+        List<String> result = new LinkedList<>();
+
+        result.add("-P");//Percentage of samples
+        result.add(""+(perc_instances*100));
+
+        result.add("-F");//Percentage of features
+        result.add(""+(perc_feat*100));
+
+        result.add("-N");//Number of classifiers
+        result.add(""+n_classifiers);
+        
+        if (k_flag)
+            result.add("-K");
+        
+        if(d_flag)
+            result.add("-D");
+        
+        if(o_flag)
+            result.add("-O");
+
+        return result.toArray(new String[result.size()]);
+  }
+    
+    @Override
+    public void setOptions(String[] options) throws Exception {
+        set_instances_perc(Float.parseFloat(Utils.getOption('P', options)));
+        set_feat_perc(Float.parseFloat(Utils.getOption('F', options)));
+        set_n_classifiers(Integer.parseInt(Utils.getOption('N', options)));
+        
+        boolean k = Utils.getFlag('K', options);
+        boolean d = Utils.getFlag('D', options);
+        if (k && d) {
+          throw new IllegalArgumentException("Can't use both kernel density "
+            + "estimation and discretization!");
+        }
+        
+        set_k_flag(k);
+        set_d_flag(d);
+        set_o_flag(Utils.getFlag('O', options));
+        Utils.checkForRemainingOptions(options);
+    }
+    
+    @Override
+    public Enumeration<Option> listOptions(){
+        List<Option> options = new LinkedList<>();
+        
+        options.add(new Option("Number of classifiers","N",1,"-N"));
+        options.add(new Option("Percentage of instances to train each classifier with", "P",1,"-P"));
+        options.add(new Option("Percentafe of features to train each classifier with", "F",1,"-F"));
+        options.add(new Option("\tUse kernel density estimator rather than normal\n"+"\tdistribution for numeric attributes", "K", 0, "-K"));
+        options.add(new Option("\tUse supervised discretization to process numeric attributes\n", "D",0, "-D"));
+        options.add(new Option("\tDisplay model in old format (good when there are "+ "many classes)\n", "O", 0, "-O"));
+        
+        return Collections.enumeration(options);
+    }
+    
+    /*Capabalities*/
+    
+    @Override
+    public Capabilities getCapabilities(){
+        
+    Capabilities result = super.getCapabilities();
+    result.disableAll();
+
+    // attributes
+    result.enable(Capability.NOMINAL_ATTRIBUTES);
+    result.enable(Capability.NUMERIC_ATTRIBUTES);
+    result.enable( Capability.MISSING_VALUES );
+
+    // class
+    result.enable(Capability.NOMINAL_CLASS);
+    result.enable(Capability.MISSING_CLASS_VALUES);
+
+    // instances
+    result.setMinimumNumberInstances(0);
+
+    return result;
     }
     
 }
