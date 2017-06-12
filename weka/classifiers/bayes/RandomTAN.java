@@ -40,10 +40,10 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
     public static final int DEF_N_CLASSIFIERS = 10;
     
     //Percentage of instances used in each classifier
-    public static final float DEF_PERC_INSTANCES = 0.6f;
+    public static final float DEF_PERC_INSTANCES = 1.0f;
     
     //Percentage of features used in each classifier
-    public static final float DEF_PERC_FEAT = 0.6f;
+    public static final float DEF_PERC_FEAT = 0.5f;
     
     //Default seed
     public static final int DEF_SEED = 0;
