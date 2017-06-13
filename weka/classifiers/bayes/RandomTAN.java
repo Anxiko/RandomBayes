@@ -1,4 +1,5 @@
 package weka.classifiers.bayes;
+import weka.classifiers.bayes.net.search.global.TAN;
 
 import java.util.Collections;
 import java.util.Enumeration;
@@ -103,7 +104,7 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.BayesNet();//Create the classifier (untrained)
-            bag[i].setSearchAlgorithm(new weka.classifiers.bayes.net.global.TAN());
+            bag[i].setSearchAlgorithm(new TAN());
             
             //Create and configure the bootsrap filter, to get a random sample of the data
             Resample bootstrap = new Resample();

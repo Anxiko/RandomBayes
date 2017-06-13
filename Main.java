@@ -7,9 +7,14 @@ import java.util.logging.Logger;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
-import weka.classifiers.bayes.RandomBayes;
 import weka.core.Attribute;
 import weka.core.Instance;
+import weka.classifiers.AbstractClassifier;
+import weka.core.Randomizable;
+
+import weka.classifiers.bayes.*;
+import weka.classifiers.bayes.net.search.global.TAN;
+import weka.classifiers.meta.Bagging;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -26,25 +31,100 @@ public class Main {
     /**
      * @param args the command line arguments
      */
+    
     public static void main(String[] args) {
         try {
-            //Name of the data file
-            String filename = "iris.arff";
+            
+            //Seed to run the experiments
+            int SEED = 9943;
+            
+            testWithFile("iris.arff",SEED);
+            testWithFile("sick.arff",SEED);
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    //Perform tests on a given .arrf file, with a seed
+    static void testWithFile(String filename, int seed){
+        try {
+            //Configuration shared by the models
+            final int PERC_INSTANCES = 100;//% of instances (with bootstrap)
+            final int PERC_FEATURES = 50;//% of features
+            final int NUM_CLASSIFIERS = 10;//Number of classifiers
+            
+            
             DataSource source = new DataSource(filename);
-            Instances data = source.getDataSet();
             // setting class attribute if the data format does not provide this information
             // For example, the XRFF format saves the class attribute information as well
+            Instances data = source.getDataSet();
             if (data.classIndex() == -1)
                 data.setClassIndex(data.numAttributes() - 1);
             
-            RandomBayes classifier = new RandomBayes();//Create the classifier (default config)
+            //NaiveBayes
+            NaiveBayes nb = new NaiveBayes();
+            testModel(data,seed,nb);
             
-            Evaluation eval = new Evaluation(data);
-            eval.crossValidateModel(classifier, data, 10, new Random(1));
+            //TAN
+            BayesNet tan = new BayesNet();
+            tan.setSearchAlgorithm(new TAN());
+            testModel(data,seed,tan);
             
-            System.out.println(eval.toSummaryString());
+            //Bagging - NaiveBayes
+            Bagging bagging_nb = new Bagging();
+            bagging_nb.setClassifier(new NaiveBayes());
+            bagging_nb.setBagSizePercent(PERC_INSTANCES);
+            bagging_nb.setNumIterations(NUM_CLASSIFIERS);
+            testModel(data,seed,bagging_nb);
+            
+            //Bagging - TAN
+            Bagging bagging_tan = new Bagging();
+            BayesNet base_bagging_tan = new BayesNet();
+            base_bagging_tan.setSearchAlgorithm(new TAN());
+            bagging_tan.setClassifier(bagging_nb);
+            testModel(data,seed,bagging_tan);
+            
+            //RandomBayes
+            RandomBayes rb = new RandomBayes();
+            rb.set_feat_perc(PERC_FEATURES);
+            rb.set_instances_perc(PERC_INSTANCES);
+            rb.set_n_classifiers(NUM_CLASSIFIERS);
+            testModel(data,seed,rb);
+            
+            //RandomTAN
+            RandomTAN rt = new RandomTAN();
+            rt.set_feat_perc(PERC_FEATURES);
+            rt.set_instances_perc(PERC_INSTANCES);
+            rt.set_n_classifiers(NUM_CLASSIFIERS);
+            testModel(data,seed,rb);
+            
         } catch (Exception ex) {
-            ex.printStackTrace();
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+    }
+    
+    //Performs tests on a single model
+    static void testModel(Instances data, int seed, AbstractClassifier c){
+        try {
+            final int CV_FOLDS = 10;
+            
+            //Train the model on a copy of the data
+            Instances dataCopy = new Instances(data);
+            c.buildClassifier(dataCopy);
+            
+            //Set the seed, if possible
+            if (c instanceof Randomizable){
+                ((Randomizable)c).setSeed(seed);
+            }
+            
+            Evaluation eval = new Evaluation(dataCopy);
+            eval.crossValidateModel(c, dataCopy, CV_FOLDS, new Random(seed));
+            System.out.println(eval.toSummaryString());
+            
+        } catch (Exception ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
