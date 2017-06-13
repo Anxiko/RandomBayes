@@ -103,7 +103,7 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.BayesNet();//Create the classifier (untrained)
-            bag[i].setSearchAlgorithm(new weka.classifiers.bayes.net.search.local.TAN());
+            bag[i].setSearchAlgorithm(new weka.classifiers.bayes.net.global.TAN());
             
             //Create and configure the bootsrap filter, to get a random sample of the data
             Resample bootstrap = new Resample();
