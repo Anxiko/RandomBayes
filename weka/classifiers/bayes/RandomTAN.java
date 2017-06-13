@@ -30,7 +30,7 @@ import weka.filters.unsupervised.attribute.Remove;
  *
  * @author Kindo
  */
-public class RandomBayes extends AbstractClassifier implements Randomizable, OptionHandler{
+public class RandomTAN extends AbstractClassifier implements Randomizable, OptionHandler{
     
     /* Config */
     
@@ -44,8 +44,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
     
     //Percentage of features used in each classifier
     public static final float DEF_PERC_FEAT = 0.5f;
-    
-    public static final boolean DEF_K_FLAG=false,DEF_D_FLAG=false,DEF_O_FLAG=false;
     
     //Default seed
     public static final int DEF_SEED = 0;
@@ -63,10 +61,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
     //Percentages of features
     float perc_feat=DEF_PERC_FEAT;
     
-    //NaiveBayes parameters
-    
-    boolean k_flag=DEF_K_FLAG,d_flag=DEF_D_FLAG,o_flag=DEF_O_FLAG;
-    
     /*Random*/
     
     //Seed used by the RNG
@@ -78,7 +72,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
     /*Bagging*/
     
     //Bag of classifiers
-    NaiveBayes[] bag;
+    BayesNet[] bag;
     
     //Filter used for each classifier
     Filter[] filters;
@@ -87,7 +81,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
     
     /*Constructors*/
     
-    public RandomBayes(){
+    public RandomTAN(){
         //Call parent constructor
         super();
     }
@@ -100,18 +94,16 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         //Build the RNG
         rng = new Random(getSeed());
         
-		//Bag of classifiers
-        bag = new NaiveBayes[n_classifiers];
+        //Bag of classifiers
+        bag = new BayesNet[n_classifiers];
         
         //Indices of attributes used in each classifier
         filters = new Filter[n_classifiers];
         
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
-            bag[i] = new weka.classifiers.bayes.NaiveBayes();//Create the classifier (untrained)
-            bag[i].setDisplayModelInOldFormat(o_flag);
-            bag[i].setUseKernelEstimator(k_flag);
-            bag[i].setUseSupervisedDiscretization(d_flag);
+            bag[i] = new weka.classifiers.bayes.BayesNet();//Create the classifier (untrained)
+            bag[i].setSearchAlgorithm(new weka.classifiers.bayes.net.search.local.TAN());
             
             //Create and configure the bootsrap filter, to get a random sample of the data
             Resample bootstrap = new Resample();
@@ -319,40 +311,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         return n_classifiers;
     }
     
-    public void set_k_flag(boolean new_flag){
-        if (bag==null){
-            k_flag=new_flag;
-            if (k_flag)
-                set_d_flag(false);
-        }
-    }
-    
-    public boolean get_k_flag(){
-        return k_flag;
-    }
-    
-    public void set_d_flag(boolean new_flag){
-        if (bag==null){
-            d_flag=new_flag;
-            if (d_flag)
-                set_k_flag(false);
-        }
-    }
-    
-    public boolean get_d_flag(){
-        return d_flag;
-    }
-    
-    public void set_o_flag(boolean new_flag){
-        if (bag==null){
-            o_flag=new_flag;
-        }
-    }
-    
-    public boolean get_o_flag(){
-        return o_flag;
-    }
-    
     @Override
     public String[] getOptions() {
         List<String> result = new LinkedList<>();
@@ -365,15 +323,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
 
         result.add("-N");//Number of classifiers
         result.add(""+n_classifiers);
-        
-        if (k_flag)
-            result.add("-K");
-        
-        if(d_flag)
-            result.add("-D");
-        
-        if(o_flag)
-            result.add("-O");
 
         return result.toArray(new String[result.size()]);
   }
@@ -384,16 +333,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         set_feat_perc(Float.parseFloat(Utils.getOption('F', options)));
         set_n_classifiers(Integer.parseInt(Utils.getOption('N', options)));
         
-        boolean k = Utils.getFlag('K', options);
-        boolean d = Utils.getFlag('D', options);
-        if (k && d) {
-          throw new IllegalArgumentException("Can't use both kernel density "
-            + "estimation and discretization!");
-        }
-        
-        set_k_flag(k);
-        set_d_flag(d);
-        set_o_flag(Utils.getFlag('O', options));
         Utils.checkForRemainingOptions(options);
     }
     
@@ -404,9 +343,6 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
         options.add(new Option("Number of classifiers","N",1,"-N"));
         options.add(new Option("Percentage of instances to train each classifier with", "P",1,"-P"));
         options.add(new Option("Percentafe of features to train each classifier with", "F",1,"-F"));
-        options.add(new Option("\tUse kernel density estimator rather than normal\n"+"\tdistribution for numeric attributes", "K", 0, "-K"));
-        options.add(new Option("\tUse supervised discretization to process numeric attributes\n", "D",0, "-D"));
-        options.add(new Option("\tDisplay model in old format (good when there are "+ "many classes)\n", "O", 0, "-O"));
         
         return Collections.enumeration(options);
     }
