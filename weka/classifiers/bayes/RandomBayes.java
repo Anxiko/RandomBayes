@@ -117,7 +117,7 @@ public class RandomBayes extends AbstractClassifier implements Randomizable, Opt
             Resample bootstrap = new Resample();
             bootstrap.setNoReplacement(false);//Using replacement
             bootstrap.setSampleSizePercent(perc_instances*100);//Set the percentage
-            bootstrap.setRandomSeed(rng.nextInt());//Set the random seed
+            bootstrap.setRandomSeed(getSeed()+1);//Set the random seed
             bootstrap.setInputFormat(data);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             
             Instances sample = Filter.useFilter(data, bootstrap);//Use the filter to get a sample
