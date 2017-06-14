@@ -1,5 +1,5 @@
 package weka.classifiers.bayes;
-import weka.classifiers.bayes.net.search.global.TAN;
+import weka.classifiers.bayes.net.search.local.TAN;
 
 import java.util.Collections;
 import java.util.Enumeration;

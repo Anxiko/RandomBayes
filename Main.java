@@ -13,7 +13,7 @@ import weka.classifiers.AbstractClassifier;
 import weka.core.Randomizable;
 
 import weka.classifiers.bayes.*;
-import weka.classifiers.bayes.net.search.global.TAN;
+import weka.classifiers.bayes.net.search.local.TAN;
 import weka.classifiers.meta.Bagging;
 
 /*
