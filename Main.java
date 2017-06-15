@@ -38,8 +38,10 @@ public class Main {
             //Seed to run the experiments
             int SEED = 9943;
             
-            testWithFile("iris.arff",SEED);
-            //testWithFile("sick.arff",SEED);
+            String[] files ={"cylinder_bands.arff", "hypothyroid.arff",  "ionosphere.arff", "kr-vs-kp.arff", "risk_factors_cervical_cancer.arff", "sick.arff", "soybean.arff", "spambase.arff", "supermarket.arff", "unbalanced.arff"};
+            
+            for (String file : files)
+                testWithFile(file,SEED);
             
         } catch (Exception ex) {
             ex.printStackTrace();
