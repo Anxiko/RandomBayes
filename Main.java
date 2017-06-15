@@ -39,7 +39,7 @@ public class Main {
             int SEED = 9943;
             
             testWithFile("iris.arff",SEED);
-            testWithFile("sick.arff",SEED);
+            //testWithFile("sick.arff",SEED);
             
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -49,6 +49,9 @@ public class Main {
     //Perform tests on a given .arrf file, with a seed
     static void testWithFile(String filename, int seed){
         try {
+            
+            System.out.println("File "+filename);
+            
             //Configuration shared by the models
             final int PERC_INSTANCES = 100;//% of instances (with bootstrap)
             final int PERC_FEATURES = 50;//% of features
@@ -97,7 +100,10 @@ public class Main {
             rt.set_feat_perc(PERC_FEATURES);
             rt.set_instances_perc(PERC_INSTANCES);
             rt.set_n_classifiers(NUM_CLASSIFIERS);
-            testModel(data,seed,rb);
+            testModel(data,seed,rt);
+            
+            RandomBayes.reset_folds();
+            RandomTAN.reset_folds();
             
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -108,11 +114,13 @@ public class Main {
     //Performs tests on a single model
     static void testModel(Instances data, int seed, AbstractClassifier c){
         try {
+            
+            System.out.println(c.getClass().toString()+ " " + ((c instanceof weka.classifiers.meta.Bagging)? ((weka.classifiers.meta.Bagging)c).getClassifier().getClass() : ""));
+            
             final int CV_FOLDS = 10;
             
             //Train the model on a copy of the data
             Instances dataCopy = new Instances(data);
-            c.buildClassifier(dataCopy);
             
             //Set the seed, if possible
             if (c instanceof Randomizable){

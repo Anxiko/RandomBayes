@@ -34,6 +34,9 @@ import weka.filters.unsupervised.attribute.Remove;
 public class RandomTAN extends AbstractClassifier implements Randomizable, OptionHandler{
     
     /* Config */
+
+    /*Static*/
+    private static int fold = 0;//Indicates the fold on CV    
     
     /*Default options*/
     
@@ -101,6 +104,8 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
         //Indices of attributes used in each classifier
         filters = new Filter[n_classifiers];
         
+        System.out.println("\nFold "+(++fold)+'\n');
+        
         //Train all the NaiveBayes
         for (int i  = 0;i<n_classifiers;++i){
             bag[i] = new weka.classifiers.bayes.BayesNet();//Create the classifier (untrained)
@@ -131,6 +136,12 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
             rem.setInputFormat(sample);//Call this last! Respect calling convention: https://weka.wikispaces.com/Use+WEKA+in+your+Java+code#Filter-Calling%20conventions
             filters[i] = rem;//Save the filter to reapply later
             sample = Filter.useFilter(sample, rem);//Remove the unselected features from the sample
+            
+            System.out.println("\nBag "+(i+1));
+            for (int att_index = 0; att_index < sample.numAttributes(); ++att_index){
+                System.out.println(sample.attribute(att_index));
+            }
+            System.out.println();
             
             bag[i].buildClassifier(sample);//Train the classifier with the sample
         }
@@ -369,6 +380,11 @@ public class RandomTAN extends AbstractClassifier implements Randomizable, Optio
     result.setMinimumNumberInstances(0);
 
     return result;
+    }
+    
+    /*Experiments*/
+    public static void reset_folds(){
+        fold = 1;
     }
     
 }
