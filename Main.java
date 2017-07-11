@@ -38,7 +38,7 @@ public class Main {
             //Seed to run the experiments
             int SEED = 9943;
             
-            String[] files ={"cylinder_bands.arff", "hypothyroid.arff",  "ionosphere.arff", "kr-vs-kp.arff", "risk_factors_cervical_cancer.arff", "sick.arff", "soybean.arff", "spambase.arff", "supermarket.arff", "unbalanced.arff"};
+            String[] files ={"cylinder_bands.arff", "hypothyroid.arff",  "ionosphere.arff", "kr-vs-kp.arff", "optdigits.arff", "risk_factors_cervical_cancer.arff", "soybean.arff", "spambase.arff", "supermarket.arff", "unbalanced.arff"};
             
             for (String file : files)
                 testWithFile(file,SEED);
