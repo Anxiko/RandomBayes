@@ -88,6 +88,9 @@ public class Main {
             BayesNet base_bagging_tan = new BayesNet();
             base_bagging_tan.setSearchAlgorithm(new TAN());
             bagging_tan.setClassifier(bagging_nb);
+            bagging_tan.setBagSizePercent(PERC_INSTANCES);
+            bagging_tan.setNumIterations(NUM_CLASSIFIERS);
+            
             testModel(data,seed,bagging_tan);
             
             //RandomBayes
