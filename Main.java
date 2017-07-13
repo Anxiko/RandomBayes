@@ -107,9 +107,6 @@ public class Main {
             rt.set_n_classifiers(NUM_CLASSIFIERS);
             testModel(data,seed,rt);
             
-            RandomBayes.reset_folds();
-            RandomTAN.reset_folds();
-            
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
